@@ -30,56 +30,56 @@ int main(void)
 	glcd_buf_print_P(48,60,"Matterhorn Gotthard Bahn");
 	glcd_setTextSize(1);
 	
+	// I know it looks ugly, but it's a demo, so... (shrug)
+	glcd_buf_print_P(0,82,"Character Table:");
 	for (uint8_t i = 1; i < 64; i++)
 	{
 		textBuf[i-1] = i;
 	}
 	textBuf[63] = 0;
-	glcd_buf_print(0,85,textBuf);
+	glcd_buf_print(0,91,textBuf);
 	for (uint8_t i = 64; i < 127; i++)
 	{
 		textBuf[i-64] = i;
 	}
 	textBuf[63] = 0;
-	glcd_buf_print(0,95,textBuf);
+	glcd_buf_print(0,100,textBuf);
 	for (uint8_t i = 127; i < 190; i++)
 	{
 		textBuf[i-127] = i;
 	}
 	textBuf[63] = 0;
-	glcd_buf_print(0,105,textBuf);
+	glcd_buf_print(0,109,textBuf);
 	for (uint8_t i = 190; i < 253; i++)
 	{
 		textBuf[i-190] = i;
 	}
 	textBuf[63] = 0;
-	glcd_buf_print(0,115,textBuf);
+	glcd_buf_print(0,118,textBuf);
 	
 	textBuf[0] = 253;
 	textBuf[1] = 254;
 	textBuf[2] = 0;
-	glcd_buf_print(0,125,textBuf);
-	
+	glcd_buf_print(0,127,textBuf);
+		
     while (1) 
     {
-		/*
 		pressedKey = sxe_getPressedKey();
 		releasedKey = sxe_getReleasedKey();
 		
 		itoa(pressedKey, textBuf, 16);
-		glcd_buf_print(200, 100, textBuf);
+		glcd_buf_print(0, 0, textBuf);
 		itoa(releasedKey, textBuf, 16);
-		glcd_buf_print(200, 109, textBuf);
+		glcd_buf_print(0, 9, textBuf);
 		
 		textBuf[0] = pressedKey;
 		textBuf[1] = 0;
-		glcd_buf_print(215, 100, textBuf);
+		glcd_buf_print(15, 0, textBuf);
 		textBuf[0] = releasedKey;
-		glcd_buf_print(215, 109, textBuf);
+		glcd_buf_print(15, 9, textBuf);
 		
 		_delay_ms(1000);
-		glcd_buf_print(200, 100, "    ");
-		glcd_buf_print(200, 109, "    ");
-		*/
+		glcd_buf_print(0, 0, "    ");
+		glcd_buf_print(0, 9, "    ");
     }
 }
