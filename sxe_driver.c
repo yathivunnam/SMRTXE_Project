@@ -9,28 +9,31 @@
 
 // Shift and Sym keys won't be returned, thus they are zero here.
 const uint8_t KeysTable_normal[60] PROGMEM = {
-	'1','2','3','4','5','6','7','8','9','0',
-	'q','w','e','r','t','y','u','i','o','p',
-	'a','s','d','f','g','h','j','k','l',KEY_DELETE,
-	0,'z','x','c','v','b','n','m',KEY_DOWN, KEY_UP,
-	0,KEY_DIV,KEY_SQRT,KEY_EXP,KEY_SPACE,',','.',KEY_LEFT,KEY_RIGHT
+	'1',	'2',	'3',	'4',	'5',	'6',	'7',	'8',	'9',	'0',
+	'q',	'w',	'e',	'r',	't',	'y',	'u',	'i',	'o',	'p',
+	'a',	's',	'd',	'f',	'g',	'h',	'j',	'k',	'l',	KEY_DELETE,
+	KEY_SHT,'z',	'x',	'c',	'v',	'b',	'n',	KEY_DOWN,KEY_NU,KEY_UP,
+	KEY_SYM,KEY_DIV,KEY_SQRT,KEY_EXP,KEY_SPACE,',',	'.',	'm',	KEY_LEFT,KEY_RIGHT,
+	KEY_S0,	KEY_S1,	KEY_S2,	KEY_S3,	KEY_S4,	KEY_S5,	KEY_S6,	KEY_S7,	KEY_S8,	KEY_S9
 };
 
 const uint8_t KeysTable_shift[60] PROGMEM = {
-	'1','2','3','4','5','6','7','8','9','0',
-	'Q','W','E','R','T','Y','U','I','O','P',
-	'A','S','D','F','G','H','J','K','L',KEY_DELETE,
-	0,'Z','X','C','V','B','N','M',KEY_DOWN, KEY_UP,
-	0,KEY_DIV,KEY_SQRT,KEY_EXP,KEY_SPACE,',','.',KEY_LEFT,KEY_RIGHT
+	'1',	'2',	'3',	'4',	'5',	'6',	'7',	'8',	'9',	'0',
+	'Q',	'W',	'E',	'R',	'T',	'Y',	'U',	'I',	'O',	'P',
+	'A',	'S',	'D',	'F',	'G',	'H',	'J',	'K',	'L',	KEY_ENTER,
+	KEY_SHT,'Z',	'X',	'C',	'V',	'B',	'N',	KEY_DOWN,KEY_NU,KEY_UP,
+	KEY_SYM,KEY_DIV,KEY_SQRT,KEY_EXP,KEY_SPACE,',',	'.',	'M',	KEY_LEFT,KEY_RIGHT,
+	KEY_S0,	KEY_S1,	KEY_S2,	KEY_S3,	KEY_S4,	KEY_S5,	KEY_S6,	KEY_S7,	KEY_S8,	KEY_S9
 };
 
 // Not all keys have a 'symbol' key, thus they return zero
 const uint8_t KeysTable_sym[60] PROGMEM = {
-	'!',KEY_PI,KEY_THETA,'$','%','°',KEY_APOSTROPH,'"','(',')',
-	0,0,0,0,0,0,0,0,'[',']',
-	'=','+','-',0,0,0,0,':','?',KEY_DELETE,
-	0,'*','/',0,0,0,KEY_EQSMALLER,KEY_EQBIGGER,KEY_DOWN, KEY_UP,
-	0,KEY_DIV,KEY_SQRT,KEY_EXP,KEY_SPACE,'<','>',KEY_LEFT,KEY_RIGHT
+	'!',	KEY_PI,	KEY_THETA,'$',	'%',	'°',KEY_APOSTROPH,'"',	'(',	')',
+	KEY_NU,	KEY_NU,	KEY_NU,	KEY_NU,	KEY_NU,	KEY_NU,	KEY_NU,	KEY_NU,	'[',	']',
+	'=',	'+',	'-',	KEY_NU,	KEY_NU,	KEY_NU,	KEY_NU,	':',	'?',	KEY_BCKSPC,
+	KEY_SHT,'*',	'/',	KEY_NU,	KEY_NU,	KEY_NU,	KEY_EQSMALLER,KEY_DOWN,KEY_NU,KEY_UP,
+	KEY_SYM,KEY_DIV,KEY_SQRT,KEY_EXP,KEY_MENU,'<',	'>',	KEY_EQBIGGER,KEY_LEFT,KEY_RIGHT,
+	KEY_S0,	KEY_S1,	KEY_S2,	KEY_S3,	KEY_S4,	KEY_S5,	KEY_S6,	KEY_S7,	KEY_S8,	KEY_S9
 };
 
 enum ddrmode {INPUT=0, OUTPUT=1};
@@ -40,6 +43,7 @@ struct keyboardHandler kbHandler;
 
 void selectRow(uint8_t rowNum, enum iomode _io, enum ddrmode _ddr);
 uint8_t selectCol(uint8_t colNum, enum iomode _io, enum ddrmode _ddr);
+
 void sxe_initHW()
 {
 	DISPDDR_RST = (1<<DISPPIN_RST);
@@ -53,7 +57,9 @@ void sxe_initHW()
 	
 	hwSPI_configurePins(&SPIPORT, &SPIDDR, SPISCK, SPIMOSI, SPISS);	// Configure the SPI I/Os
 	hwSPI_init();										// init / start SPI.
-	hwSPI_setClockDivider(hwSPI_CLOCK_DIV8);			// Display SCLK"H" is 140, "L" is 60 -> DIV8 is the fastest speed the Display allows (at 16MHz) -> 500ns period.
+	
+	hwSPI_setClockDivider(hwSPI_CLOCK_DIV2);			// Experimental. Surprisingly, DIV4 SPI speed works fine
+	//hwSPI_setClockDivider(hwSPI_CLOCK_DIV8);			// Display SCLK"H" is 140, "L" is 60 -> DIV8 is the fastest speed the Display allows (at 16MHz) -> 500ns period.
 	
 	ST7586_init(0);
 }
@@ -205,7 +211,7 @@ uint8_t selectCol(uint8_t colNum, enum iomode _io, enum ddrmode _ddr)
 
 uint8_t readCol()
 {
-	 uint8_t temp = 0x00;
+	 uint8_t temp = 0;
 	 for (uint8_t i = 0; i < 6; i++)
 	 {
 		 temp |= (selectCol(i,LOW,INPUT) ? (1<<i) : 0);
@@ -219,16 +225,11 @@ void sxe_scanKeyboard()
 	{
 		selectRow(i,LOW,OUTPUT);
 		_delay_us(50);
-		kbHandler.keys[i] = ~readCol();	// Make active-low to active-high!
+		kbHandler.keys[i] = (~readCol() & 0x3F);	// Make active-low to active-high!
 		selectRow(i,LOW,INPUT);
 	}
 	kbHandler.shift = ((kbHandler.keys[0] & (1<<3)) ? 1 : 0);
 	kbHandler.sym = ((kbHandler.keys[0] & (1<<4)) ? 1 : 0);
-}
-
-struct keyboardHandler getKeyboardHandler()
-{
-	return kbHandler;
 }
 
 // if a key is pressed, return it but only once even if it's still pressed in the next call
@@ -246,33 +247,25 @@ uint8_t sxe_getPressedKey(void)
 				if (!(kbHandler.keysPressed[row] & (1<<col)))
 				{
 					kbHandler.keysPressed[row] |= (1<<col);
+
 					if (kbHandler.shift)
 					{
-						temp = pgm_read_byte(&(KeysTable_shift[(row * 10) + col]));
-						if (temp == 0)
-						{
-							continue;
-						}
-						return temp;
+						temp = pgm_read_byte(&(KeysTable_shift[(col * 10) + row]));
 					}
 					else if (kbHandler.sym)
 					{
-						temp = pgm_read_byte(&(KeysTable_sym[(row * 10) + col]));
-						if (temp == 0)
-						{
-							continue;
-						}
-						return temp;
+						temp = pgm_read_byte(&(KeysTable_sym[(col * 10) + row]));
 					}
 					else
 					{
-						temp = pgm_read_byte(&(KeysTable_normal[(row * 10) + col]));
-						if (temp == 0)
-						{
-							continue;
-						}
-						return temp;
-					}					
+						temp = pgm_read_byte(&(KeysTable_normal[(col * 10) + row]));
+					}
+					
+					if ((temp == KEY_NU) || (temp == KEY_SYM) || (temp == KEY_SHT))
+					{
+						continue;
+					}
+					return temp;	
 				}
 			}
 			else
@@ -287,7 +280,7 @@ uint8_t sxe_getPressedKey(void)
 uint8_t sxe_getReleasedKey(void)
 {
 	sxe_scanKeyboard();
-	uint8_t temp;
+	uint8_t releasedKey;
 	for (uint8_t row = 0; row < 10; row++)
 	{
 		for (uint8_t col = 0; col < 6; col++)
@@ -298,37 +291,28 @@ uint8_t sxe_getReleasedKey(void)
 			}
 			else
 			{
-				if (kbHandler.keysRelease[row] & (1<<col));
+				if (kbHandler.keysRelease[row] & (1<<col))
 				{
 					kbHandler.keysRelease[row] &=~ (1<<col);
 					
 					if (kbHandler.shift)
 					{
-						temp = pgm_read_byte(&(KeysTable_shift[(row * 10) + col]));
-						if (temp == 0)
-						{
-							continue;
-						}
-						return temp;
+						releasedKey = pgm_read_byte(&(KeysTable_shift[(col * 10) + row]));
 					}
 					else if (kbHandler.sym)
 					{
-						temp = pgm_read_byte(&(KeysTable_sym[(row * 10) + col]));
-						if (temp == 0)
-						{
-							continue;
-						}
-						return temp;
+						releasedKey = pgm_read_byte(&(KeysTable_sym[(col * 10) + row]));
 					}
 					else
 					{
-						temp = pgm_read_byte(&(KeysTable_normal[(row * 10) + col]));
-						if (temp == 0)
-						{
-							continue;
-						}
-						return temp;
+						releasedKey = pgm_read_byte(&(KeysTable_normal[(col * 10) + row]));
 					}
+					
+					if ((releasedKey == KEY_NU) || (releasedKey == KEY_SYM) || (releasedKey == KEY_SHT))
+					{
+						continue;
+					}
+					return releasedKey;
 				}
 			}
 		}
@@ -336,44 +320,56 @@ uint8_t sxe_getReleasedKey(void)
 	return 0;
 }
 
-uint8_t sxe_isKeyPressed(uint8_t key, uint8_t row, uint8_t col)
+uint8_t sxe_isKeyMapPressed(uint8_t row, uint8_t col)
 {
+	uint8_t checkedKey = 0;
 	sxe_scanKeyboard();
-	if (key)
-	{		
-		for (uint8_t row = 0; row < 10; row++)
+	if (kbHandler.keys[row] & (1<<col))
+	{
+		if (kbHandler.shift)
 		{
-			for (uint8_t col = 0; col < 6; col++)
+			checkedKey = pgm_read_byte(&(KeysTable_shift[(col * 10) + row]));
+		}
+		else if (kbHandler.sym)
+		{
+			checkedKey = pgm_read_byte(&(KeysTable_sym[(col * 10) + row]));
+		}
+		else
+		{
+			checkedKey = pgm_read_byte(&(KeysTable_normal[(col * 10) + row]));
+		}
+	}
+	return (checkedKey);
+}
+
+uint8_t sxe_isKeyPressed(uint8_t pkey, uint8_t ignoreShiftSym)
+{
+	uint8_t isPressed;
+	sxe_scanKeyboard();
+	for (uint8_t row = 0; row < 10; row++)
+	{
+		for (uint8_t col = 0; col < 6; col++)
+		{
+			if (kbHandler.keys[row] & (1<<col))
 			{
-				if (kbHandler.sym)
+				if (kbHandler.shift)
 				{
-					if (pgm_read_byte(&(KeysTable_sym[(row * 10) + col])) == key)
-					{
-						return 1;
-					}
+					isPressed = pgm_read_byte(&(KeysTable_shift[(col * 10) + row]));
 				}
-				else if (kbHandler.shift)
+				else if (kbHandler.sym)
 				{
-					if (pgm_read_byte(&(KeysTable_shift[(row * 10) + col])) == key)
-					{
-						return 1;
-					}
+					isPressed = pgm_read_byte(&(KeysTable_sym[(col * 10) + row]));
 				}
 				else
 				{
-					if (pgm_read_byte(&(KeysTable_normal[(row * 10) + col])) == key)
-					{
-						return 1;
-					}		
+					isPressed = pgm_read_byte(&(KeysTable_normal[(col * 10) + row]));
+				}
+				
+				if (isPressed == pkey)
+				{
+					return isPressed;
 				}
 			}
-		}
-	}
-	else
-	{
-		if (kbHandler.keys[row] & (1<<col))
-		{
-			return 1;
 		}
 	}
 	return 0;

@@ -260,13 +260,94 @@ const uint8_t font[] PROGMEM = {
 	0x00, 0x00, 0x00, 0x00, 0x00  // #255 NBSP
 };
 
+uint8_t _fgcolor = GLCD_TEXTFGCOLOR;
+uint8_t _bgcolor = GLCD_TEXTBGCOLOR;
+uint8_t _size = GLCD_TEXTSIZE;
+
 #ifdef ST7586_H_
 struct ST7586_reservedArea ST7586_DrawingArea;
-uint8_t textBuffer[1024];
+struct ST7586_reservedArea PrintDrawingArea;
+uint8_t ST7586_BufferEnabled = 0;
+void glcd_useBuffer(struct ST7586_reservedArea *inst)
+{
+	ST7586_DrawingArea = *inst;
+	ST7586_BufferEnabled = 1;
+}
+
+void glcd_useNormalMethod()
+{
+	ST7586_BufferEnabled = 0;
+}
+
+uint8_t glcd_getCurrentMethod()
+{
+	return ST7586_BufferEnabled;
+}
+
+void glcd_ST7586_setPixel(uint16_t x, uint16_t y, uint8_t c)
+{
+	if (ST7586_BufferEnabled)
+	{
+		if (ST7586_BufferEnabled == 2)
+		{
+			ST7586_setPixelReservedArea(&PrintDrawingArea, x, y, c);
+		}
+		else
+		{
+			ST7586_setPixelReservedArea(&ST7586_DrawingArea, x, y, c);
+		}
+	}
+	else
+	{
+		ST7586_setPixel(x, y, c);
+	}
+}
+
+void glcd_buf_print(uint16_t x, uint16_t y, char *character)
+{
+	PrintDrawingArea = ST7586_getReservedAreaMalloc(x,y,(strlen(character) * 6 * _size) + x, y + 8 * _size);
+	uint8_t _temp = ST7586_BufferEnabled;
+	ST7586_BufferEnabled = 2;
+	
+	while(*character)
+	{
+		glcd_char(x, y, *character, _fgcolor, _bgcolor, _size);
+		if (*character++)
+		{
+			x += _size * 6;
+		}
+	}
+	
+	ST7586_sendReservedArea(&PrintDrawingArea);
+	ST7586_destroyReservedArea(&PrintDrawingArea);
+	ST7586_forcePixelUpdate();
+	ST7586_BufferEnabled = _temp;
+}
+
+void glcd_buf_print_progmem(uint16_t x, uint16_t y,const char *character)
+{
+	PrintDrawingArea = ST7586_getReservedAreaMalloc(x, y, (strlen_P(character) * 6 * _size) + x, y + 8 * _size);
+	uint8_t _temp = ST7586_BufferEnabled;
+	ST7586_BufferEnabled = 2;
+	
+	char c = pgm_read_byte(character);
+	while ( (c = pgm_read_byte(character++)) )
+	{
+		glcd_char(x, y, c, _fgcolor, _bgcolor, _size);
+		x += _size * 6;
+	}
+	
+	ST7586_sendReservedArea(&PrintDrawingArea);
+	ST7586_destroyReservedArea(&PrintDrawingArea);
+	ST7586_forcePixelUpdate();
+	ST7586_BufferEnabled = _temp;
+}
 #endif
 
-void glcd_load_image(const char image[], char colour){
-	/*short pointer = 0;
+void glcd_load_image(const char image[], uint8_t colour)
+{
+	/*
+	short pointer = 0;
 	for(char w = 0; w < 8; w++){
 		glcd_command(0xB8 | w, CS1);
 		glcd_command(0xB8 | w, CS2);	
@@ -301,7 +382,7 @@ void glcd_load_image(const char image[], char colour){
 	}
 }
 	
-void glcd_draw_line(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, char colour)
+void glcd_draw_line(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint8_t colour)
 {
 	int dx =  abs(x1-x0), sx = x0<x1 ? 1 : -1;
 	int dy = -abs(y1-y0), sy = y0<y1 ? 1 : -1;
@@ -316,7 +397,7 @@ void glcd_draw_line(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, char col
 	}
 }
 
-void glcd_draw_rectangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, char colour)
+void glcd_draw_rectangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint8_t colour)
 {
 	glcd_draw_line(x0,y0,x0,y1,colour);
 	glcd_draw_line(x0,y0,x1,y0,colour);
@@ -324,7 +405,25 @@ void glcd_draw_rectangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, cha
 	glcd_draw_line(x1,y0,x1,y1,colour);	
 }
 
-void glcd_circle(uint16_t cx, uint16_t cy, uint16_t radius, char colour)
+void glcd_draw_rectangle_filled(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint8_t colour)
+{
+	for (uint16_t y = y0; y < y1; y++)
+	{
+		glcd_draw_line(x0,y,x1,y,colour);
+	}
+}
+
+void glcd_drawBarV(uint16_t x0, uint16_t y0, uint16_t h, uint16_t w, uint16_t hFilled, uint8_t filledColor, uint8_t bgColor)
+{
+	glcd_draw_rectangle(x0,y0,x0+h,y0+w,filledColor);
+}
+
+void glcd_drawBarH(uint16_t x0, uint16_t y0, uint16_t h, uint16_t w, uint16_t wFilled, uint8_t filledColor, uint8_t bgColor)
+{
+	
+}
+
+void glcd_circle(uint16_t cx, uint16_t cy, uint16_t radius, uint8_t colour)
 {
 	int x, y, xchange, ychange, radiusError;
 	x = radius;
@@ -354,7 +453,7 @@ void glcd_circle(uint16_t cx, uint16_t cy, uint16_t radius, char colour)
 	}
 }
 
-void glcd_clear(char colour){
+void glcd_clear(uint8_t colour){
 #ifdef KS0108_H
 	for(char w = 0; w < 8; w++){
 		
@@ -418,40 +517,31 @@ void glcd_invert(){
 #endif
 }
 
-void glcd_char(uint16_t x, uint16_t y, char character, char fgcolor)
+
+void glcd_setTextBGcolor(uint8_t bgcolor)
 {
-/*
-	if((x >= _width)            || // Clip right
-		(y >= _height)           || // Clip bottom
+	_bgcolor = bgcolor;
+}
+
+void glcd_setTextFGcolor(uint8_t fgcolor)
+{
+	_fgcolor = fgcolor;
+}
+
+void glcd_setTextSize(uint8_t size)
+{
+	_size = size;
+}
+
+void glcd_char(uint16_t x, uint16_t y, char character, uint8_t fgcolor, uint8_t bgcolor, uint8_t size)
+{
+
+	if((x >= GLCD_WIDTH)            || // Clip right
+		(y >= GLCD_HEIGHT)           || // Clip bottom
 		((x + 6 * size - 1) < 0) || // Clip left
 		((y + 8 * size - 1) < 0))   // Clip top
 	return;
-*/
-#ifdef ST7586_H_
-	uint8_t line[5];
-	for (uint8_t i = 0; i < 5; i++)
-	{
-		line[i] = (uint8_t)pgm_read_byte(&(font[character * 5 + i]));
-	}
-	
-	for (uint8_t j = 0; j<8; j++)
-	{
-		for (uint8_t i = 0; i<5; i++)
-		{
-			if (line[i] & (1<<j))
-			{
-				if (!ST7586_DrawingArea.errorCode)
-				{
-					ST7586_setPixelReservedArea(&ST7586_DrawingArea, x+i, y+j, fgcolor);
-				}
-				else
-				{
-					GLCD_SETXY(x+i, y+j, fgcolor);
-				}
-			}
-		}
-	}
-#else
+
 	for(char i=0; i<5; i++ )
 	{ // Char bitmap = 5 columns
 		char line = pgm_read_byte(&(font[character * 5 + i]));
@@ -459,23 +549,40 @@ void glcd_char(uint16_t x, uint16_t y, char character, char fgcolor)
 		{
 			if(line & 1)
 			{
-				GLCD_SETXY(x+i, y+j, fgcolor);
+				if (size == 1)
+				{
+					GLCD_SETXY(x+i, y+j, fgcolor);
+				}
+				else
+				{
+					glcd_draw_rectangle_filled(x+i*size, y+j*size, (x+i*size) + size, (y+j*size) + size, fgcolor);
+				}
+			}
+			else
+			{
+				if (size == 1)
+				{
+					GLCD_SETXY(x+i,y+j, bgcolor);
+				}
+				else
+				{
+					glcd_draw_rectangle_filled(x+i*size, y+j*size, (x+i*size) + size, (y+j*size) + size, bgcolor);
+				}
 			}
 		}
 	}
-#endif
 }
 
-void glcd_print(uint16_t x, uint16_t y,char *character, char fgcolor)
+void glcd_print(uint16_t x, uint16_t y,char *character)
 {	
 #ifdef ST7586_H_
 	ST7586_DrawingArea = ST7586_getReservedAreaMalloc(x,y,(strlen(character)*6)+x,y+8);
 #endif
 	while(*character)
-	{		
-		glcd_char(x, y, *character, fgcolor);
-		character++;
-		x = x + 6;
+	{
+		glcd_char(x, y, *character++, _fgcolor, _bgcolor, _size);
+		if (*character++)
+			x += _size * 6;
 	}
 #ifdef ST7586_H_
 	ST7586_sendReservedArea(&ST7586_DrawingArea);
@@ -483,19 +590,9 @@ void glcd_print(uint16_t x, uint16_t y,char *character, char fgcolor)
 #endif // ST7586_H_
 }
 
-void glcd_draw_rectangle_filled(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, char colour)
-{
-	while( !((x0 >= x1) | (y0 >= y1))){
-		glcd_draw_rectangle(x0, y0, x1, y1, colour);
-		x0 = x0 + 1;
-		y0 = y0 + 1;
-		x1 = x1 - 1;
-		y1 = y1 - 1;
-	
-	} 
-}
 
-void glcd_print_progmem(uint16_t x, uint16_t y,const char *character, char fgcolor)
+
+void glcd_print_progmem(uint16_t x, uint16_t y,const char *character)
 {
 #ifdef ST7586_H_
 	ST7586_DrawingArea = ST7586_getReservedAreaMalloc(x, y, (strlen_P(character) * 6) + x, y + 8);
@@ -503,8 +600,8 @@ void glcd_print_progmem(uint16_t x, uint16_t y,const char *character, char fgcol
 	char c;
 	while ( (c = pgm_read_byte(character++)) )
 	{
-		glcd_char(x, y, c, fgcolor);
-		x = x + 6;
+		glcd_char(x, y, c, _fgcolor, _bgcolor, _size);
+		x += _size * 6;
 	}
 #ifdef ST7586_H_
 	ST7586_sendReservedArea(&ST7586_DrawingArea);

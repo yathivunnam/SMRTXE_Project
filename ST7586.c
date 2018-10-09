@@ -230,7 +230,7 @@ struct ST7586_reservedArea ST7586_getReservedAreaMalloc(uint16_t x1, uint16_t y1
 	{
 		drawArea.cx = (x2 - x1) + 1;
 		drawArea.cy = (y2 - y1) + 1;
-		uint16_t calBufSize = ((drawArea.cx * drawArea.cy) / 4) + 1;
+		uint16_t calBufSize = ((drawArea.cx * drawArea.cy) >> 2) + 1;
 		drawArea.drawBuffer = (uint8_t *)malloc(calBufSize);
 		
 		if (drawArea.drawBuffer==NULL)
@@ -301,8 +301,8 @@ void ST7586_setPixelReservedArea(struct ST7586_reservedArea *inst, uint16_t x, u
 	
 	x -= inst->x1;
 	y -= inst->y1;
-	uint16_t coords = ((x + (inst->cx * y))/4);
-	uint16_t shift = (((inst->cx * y) + x) % 4) * 2;
+	uint16_t coords = ((x + (inst->cx * y)) >> 2);	
+	uint16_t shift = (((inst->cx * y) + x) % 4) << 1;
 	inst->drawBuffer[coords] |= (color << shift);
 };
 
@@ -313,24 +313,16 @@ void ST7586_sendReservedArea(struct ST7586_reservedArea *inst)
 		return;
 	}
 	
-	uint16_t position,xx,yy;
+	uint16_t position;
 	uint16_t shift, data;
 	for (uint16_t y = 0; y < inst->cy; y++)
 	{
 		for (uint16_t x = 0; x < inst->cx; x++)
 		{
-			position = ((x + (inst->cx * y)) / 4); 
-			//shift = (((((inst->cx) * y) + x) % 4) * 2);
-			shift = inst->cx * y;
-			shift = shift + x;
-			shift = shift % 4;
-			shift = shift * 2;
-			data = inst->drawBuffer[position];
-			data = data >> (uint8_t)shift;
-			data = data & 0x03;
-			xx = x + inst->x1;
-			yy = y + inst->y1;
-			ST7586_setPixel(xx, (uint8_t)(yy), data);
+			position = ((x + (inst->cx * y)) >> 2); 
+			shift = (((((inst->cx) * y) + x) % 4) << 1);
+			data = (inst->drawBuffer[position] >> (uint8_t)shift) & 0x03;
+			ST7586_setPixel(x + inst->x1, (uint8_t)(y + inst->y1), data);
 		}
 		ST7586_forcePixelUpdate();
 	}

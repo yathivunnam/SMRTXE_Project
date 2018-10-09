@@ -8,54 +8,78 @@
  */ 
 
 #include "sxe_driver.h"
-#include "glcd_library.h"
 
-struct ST7586_reservedArea testArea;
-
-void draw_line(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, char colour)
-{
-	int dx =  abs(x1-x0), sx = x0<x1 ? 1 : -1;
-	int dy = -abs(y1-y0), sy = y0<y1 ? 1 : -1;
-	int err = dx+dy, e2; /* error value e_xy */
-	
-	while(1){
-		ST7586_setPixelReservedArea(&testArea, x0, y0, ST7586_COLOR_BLACK);
-		if (x0==x1 && y0==y1) break;
-		e2 = 2*err;
-		if (e2 > dy) { err += dy; x0 += sx; } /* e_xy+e_x > 0 */
-		if (e2 < dx) { err += dx; y0 += sy; } /* e_xy+e_y < 0 */
-	}
-}
+#define SendAndDeleteBuffer(x) do{ST7586_sendReservedArea(&x);glcd_useNormalMethod();ST7586_destroyReservedArea(&x);}while(0)
 
 int main(void)
 {
 	sxe_initHW();
-	ST7586_init(0);
 	
-	// Precise Pixel-write with the display's basic function
-	for (uint8_t pos = 0; pos < ST7586_DISPLAYSIZE_Y; pos++)
-	{
-		ST7586_setPixel(pos, pos, ST7586_COLOR_DARKGRAY);
-		ST7586_setPixel(pos+1, pos, ST7586_COLOR_LIGHTGRAY);
-		ST7586_setPixel(pos+2, pos, ST7586_COLOR_DARKGRAY);
-		ST7586_setPixel(pos+5, pos, ST7586_COLOR_BLACK);
-	}
+	uint8_t pressedKey;
+	uint8_t releasedKey;
+	char textBuf[64];
 	
 	// Text Demo, uses the Driver-Buffering feature
-	glcd_print_P(50,10,"Graphics-Library for the SMART Response XE", ST7586_COLOR_BLACK);
-	glcd_print_P(50,20,"Supports Pixel-Precise Control", ST7586_COLOR_BLACK);
-	glcd_print_P(50,30,"In all 4 colours", ST7586_COLOR_BLACK);
 	
-	// Buffered Pixel example write
-	testArea = ST7586_getReservedAreaMalloc(150,50,200,55);
-	draw_line(150,50,200,55,ST7586_COLOR_BLACK);
-	ST7586_sendReservedArea(&testArea);
-	ST7586_destroyReservedArea(&testArea);
-	//glcd_draw_line(150, 55, 200, 60, ST7586_COLOR_BLACK);
-	ST7586_forcePixelUpdate();
+	glcd_draw_line(30,83,80,0,ST7586_COLOR_BLACK);
+	glcd_draw_line(304,0,354,83,ST7586_COLOR_BLACK);
+	glcd_setTextSize(3);
+	glcd_buf_print_P(84,0,"WC-Steuerung");
+	glcd_buf_print_P(75,27,"Diagnoseger\x84t");
+	glcd_setTextSize(2);
+	glcd_buf_print_P(48,60,"Matterhorn Gotthard Bahn");
+	glcd_setTextSize(1);
+	
+	for (uint8_t i = 1; i < 64; i++)
+	{
+		textBuf[i-1] = i;
+	}
+	textBuf[63] = 0;
+	glcd_buf_print(0,85,textBuf);
+	for (uint8_t i = 64; i < 127; i++)
+	{
+		textBuf[i-64] = i;
+	}
+	textBuf[63] = 0;
+	glcd_buf_print(0,95,textBuf);
+	for (uint8_t i = 127; i < 190; i++)
+	{
+		textBuf[i-127] = i;
+	}
+	textBuf[63] = 0;
+	glcd_buf_print(0,105,textBuf);
+	for (uint8_t i = 190; i < 253; i++)
+	{
+		textBuf[i-190] = i;
+	}
+	textBuf[63] = 0;
+	glcd_buf_print(0,115,textBuf);
+	
+	textBuf[0] = 253;
+	textBuf[1] = 254;
+	textBuf[2] = 0;
+	glcd_buf_print(0,125,textBuf);
 	
     while (1) 
     {
+		/*
+		pressedKey = sxe_getPressedKey();
+		releasedKey = sxe_getReleasedKey();
 		
+		itoa(pressedKey, textBuf, 16);
+		glcd_buf_print(200, 100, textBuf);
+		itoa(releasedKey, textBuf, 16);
+		glcd_buf_print(200, 109, textBuf);
+		
+		textBuf[0] = pressedKey;
+		textBuf[1] = 0;
+		glcd_buf_print(215, 100, textBuf);
+		textBuf[0] = releasedKey;
+		glcd_buf_print(215, 109, textBuf);
+		
+		_delay_ms(1000);
+		glcd_buf_print(200, 100, "    ");
+		glcd_buf_print(200, 109, "    ");
+		*/
     }
 }
