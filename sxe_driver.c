@@ -7,6 +7,15 @@
 
 #include "sxe_driver.h"
 
+//Keyboard Layout (SK# are screen keys: top to bottom 0-4 on left, 5-9 on right):
+//                ROW1|ROW2|ROW3|ROW4|ROW5|ROW6|ROW7|ROW8|ROW9|ROW10
+//           COL1    1|   2|   3|   4|   5|   6|   7|   8|   9|    0
+//           COL2    Q|   W|   E|   R|   T|   Y|   U|   I|   O|    P
+//           COL3    A|   S|   D|   F|   G|   H|   J|   K|   L| Bksp
+//           COL4 Shft|   Z|   X|   C|   V|   B|   N|Down| NC |  Up
+//           COL5  Sym|Frac|Root| Exp| Spc|   ,|   .|   M|Left|Right
+//           COL6  SK0| SK1| SK2| SK3| SK4| SK5| SK6| SK7| SK8|  SK9
+
 // Shift and Sym keys won't be returned, thus they are zero here.
 const uint8_t KeysTable_normal[60] PROGMEM = {
 	'1',	'2',	'3',	'4',	'5',	'6',	'7',	'8',	'9',	'0',
@@ -46,9 +55,11 @@ uint8_t selectCol(uint8_t colNum, enum iomode _io, enum ddrmode _ddr);
 
 void sxe_initHW()
 {
-	DISPDDR_RST = (1<<DISPPIN_RST);
-	DISPDDR_A0 = (1<<DISPPIN_A0);
-	DISPDDR_CE = (1<<DISPPIN_CE);
+	DISPDDR_RST |= (1<<DISPPIN_RST);
+	DISPDDR_A0 |= (1<<DISPPIN_A0);
+	DISPDDR_CE |= (1<<DISPPIN_CE);
+	EEPROMDDR |= (1<<EEPROMCS);
+	EEPROMPORT |= (1<<EEPROMCS);
 	
 	for (uint8_t i = 0; i < 10; i++)
 	{

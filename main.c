@@ -20,7 +20,6 @@ int main(void)
 	char textBuf[64];
 	
 	// Text Demo, uses the Driver-Buffering feature
-	
 	glcd_draw_line(30,83,80,0,ST7586_COLOR_BLACK);
 	glcd_draw_line(304,0,354,83,ST7586_COLOR_BLACK);
 	glcd_setTextSize(3);
@@ -30,6 +29,7 @@ int main(void)
 	glcd_buf_print_P(48,60,"Matterhorn Gotthard Bahn");
 	glcd_setTextSize(1);
 	
+	// Character table demo. 63 character fit on one line
 	// I know it looks ugly, but it's a demo, so... (shrug)
 	glcd_buf_print_P(0,82,"Character Table:");
 	for (uint8_t i = 1; i < 64; i++)
@@ -61,25 +61,39 @@ int main(void)
 	textBuf[1] = 254;
 	textBuf[2] = 0;
 	glcd_buf_print(0,127,textBuf);
-		
+	
+	// Keyboard demo. Prints the pressed and released key(s) every second.
+	glcd_buf_print_P(0,0,"Keyboard");
+	glcd_buf_print_P(0,9,"Demo:");
+	if (mx25_init())
+	{
+		glcd_buf_print_P(360,0,"E!");
+	}
+	else
+	{
+		glcd_buf_print_P(320,0, "EEPROM ID:");
+		itoa(mx25_getIdentification(), textBuf, 16);
+		glcd_buf_print(350,9,textBuf);
+	}
+
     while (1) 
     {
 		pressedKey = sxe_getPressedKey();
 		releasedKey = sxe_getReleasedKey();
 		
 		itoa(pressedKey, textBuf, 16);
-		glcd_buf_print(0, 0, textBuf);
+		glcd_buf_print(0, 18, textBuf);
 		itoa(releasedKey, textBuf, 16);
-		glcd_buf_print(0, 9, textBuf);
+		glcd_buf_print(0, 27, textBuf);
 		
 		textBuf[0] = pressedKey;
 		textBuf[1] = 0;
-		glcd_buf_print(15, 0, textBuf);
+		glcd_buf_print(15, 18, textBuf);
 		textBuf[0] = releasedKey;
-		glcd_buf_print(15, 9, textBuf);
+		glcd_buf_print(15, 27, textBuf);
 		
 		_delay_ms(1000);
-		glcd_buf_print(0, 0, "    ");
-		glcd_buf_print(0, 9, "    ");
+		glcd_buf_print(0, 18, "    ");
+		glcd_buf_print(0, 27, "    ");
     }
 }

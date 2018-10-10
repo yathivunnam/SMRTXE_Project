@@ -17,6 +17,7 @@
 #include "hwSPI.h"
 #include "ST7586.h"
 #include "glcd_library.h"
+#include "mx25L1005c.h"
 
 #define KEY_NU		0x01
 #define KEY_BCKSPC	0x08
