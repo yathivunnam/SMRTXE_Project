@@ -1,6 +1,6 @@
 /*
  * Portable Mikrocontroller-Plattform, mit einer vollen Tastatur und Funktionstasten,
- * einem 384x160x2 Graustufen-LCD, EEPROM und einem Funk-f‰higen Atmel AVR.
+ * einem 384x160x2 Graustufen-LCD, EEPROM und einem Funk-f√§higen Atmel AVR.
  * SMART_ResponseXE.c
  *
  * Created: 10.09.2018 10:43:35
@@ -65,6 +65,8 @@ int main(void)
 	// Keyboard demo. Prints the pressed and released key(s) every second.
 	glcd_buf_print_P(0,0,"Keyboard");
 	glcd_buf_print_P(0,9,"Demo:");
+	
+	// EEPROM / Flash demo - initializing it and displaying the EEPROM Device and manufacturer ID
 	if (mx25_init())
 	{
 		glcd_buf_print_P(360,0,"E!");
