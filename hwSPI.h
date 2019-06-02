@@ -1,13 +1,13 @@
 /**
- * @mainpage Hardware-SPI Bibliothek für Atmel AVR Mikrocontroller
+ * @mainpage Hardware-SPI Bibliothek fÃ¼r Atmel AVR Mikrocontroller
  * @brief Die Bibliothek erlaubt die einfache Anwendung der Hardware-SPI
- * Peripherie des Atmel Microcontrollers und kann nachträglich vom
+ * Peripherie des Atmel Microcontrollers und kann nachtrÃ¤glich vom
  * Anwender mit einer Interrupt-Routine erweitert werden.
  *
  * @version 1.0
- * -Veröffentlichung der Bibliothek
+ * -VerÃ¶ffentlichung der Bibliothek
  *
- * @author Pascal Gesell
+ * @author gfcwfzkm
  * @date 25.09.2015
  */
 
@@ -101,11 +101,11 @@ void hwSPI_init();
 /**
  * @brief Hardware-SPI Pins definieren
  *
- * Übergibt Port, DDR  & die Pins für 'SCK', 'MOSI' und 'SS' and die
- * Bibliothek weiter, welche für die Initialisierung notwendig sind.
+ * Ãœbergibt Port, DDR  & die Pins fÃ¼r 'SCK', 'MOSI' und 'SS' and die
+ * Bibliothek weiter, welche fÃ¼r die Initialisierung notwendig sind.
  * \n Beispiel: \n \code{.c}
  * hwSPI_configurePins(&PORTB, &DDRB, SCKPIN, MOSIPIN, SSPIN);
- * \endcode Übergibt die SPI-Pins eines ATmega88 (oder ähnlich) an die Bibliothek weiter.
+ * \endcode Ãœbergibt die SPI-Pins eines ATmega88 (oder Ã¤hnlich) an die Bibliothek weiter.
  * @param spiPort Port der SPI-Schnittstelle
  * @param spiDDR DDR-Register des Port's der SPI-Schnittstelle
  * @param sckBIT Pin des Port's der SPI-Schnittstelle
@@ -124,7 +124,7 @@ void hwSPI_configurePins(volatile uint8_t *spiPort, volatile uint8_t *spiDDR,
 void hwSPI_close();
 
 /**
- * @brief Datenübertragung MSB oder LSB
+ * @brief DatenÃ¼bertragung MSB oder LSB
  *
  * Stellt die SPI-Hardware darauf ein, ob das LSB oder MSB
  * zuerst gesendet werden soll.
@@ -136,7 +136,7 @@ void hwSPI_setBitOrder(uint8_t bitOrder);
  * @brief Datenmodus setzten
  *
  * Stellt den Datenmodus der SPI-Peripherie ein. Siehe dazu
- * das Datenblatt für weitere Infos.
+ * das Datenblatt fÃ¼r weitere Infos.
  * @param mode SPI-Modus (z.B. hwSPI_MODE0)
  */
 void hwSPI_setDataMode(uint8_t mode);
@@ -145,17 +145,17 @@ void hwSPI_setDataMode(uint8_t mode);
  * @brief Taktvorteiler einstellen
  *
  * Stellt den Taktvorteiler ein, womit der CPU-Takt
- * für den SPI-BUS vorgeteilt wird (mind.: 2, max.: 128)
+ * fÃ¼r den SPI-BUS vorgeteilt wird (mind.: 2, max.: 128)
  * @param rate Taktvorteiler (z.B. hwSPI_CLOCK_DIV2)
  */
 void hwSPI_setClockDivider(uint8_t rate);
 
 /**
- * @brief Einstellungsänderungen anzeigen
+ * @brief EinstellungsÃ¤nderungen anzeigen
  *
- * Gibt zurück, ob und welche Einstellungen geändert wurden 
- * z.B. durch Bibliotheken für andere Peripherie-ICs
- * @return Geänderte Einstellung (xxxx'x ClockDividerChangedBit DatamodeChangedBit BitorderchangedBit)
+ * Gibt zurÃ¼ck, ob und welche Einstellungen geÃ¤ndert wurden 
+ * z.B. durch Bibliotheken fÃ¼r andere Peripherie-ICs
+ * @return GeÃ¤nderte Einstellung (xxxx'x ClockDividerChangedBit DatamodeChangedBit BitorderchangedBit)
  */
 uint8_t hwSPI_getChangedSettings();
 
