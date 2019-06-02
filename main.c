@@ -26,7 +26,7 @@ int main(void)
 	glcd_buf_print_P(84,0,"WC-Steuerung");
 	glcd_buf_print_P(75,27,"Diagnoseger\x84t");
 	glcd_setTextSize(2);
-	glcd_buf_print_P(48,60,"Matterhorn Gotthard Bahn");
+	glcd_buf_print_P(48,60,"Some Company Title");
 	glcd_setTextSize(1);
 	
 	// Character table demo. 63 character fit on one line
