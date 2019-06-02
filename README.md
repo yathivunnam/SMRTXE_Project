@@ -24,4 +24,3 @@ All required pins, ports and direction registers are defined here.
 --- main.c
 Demo-program that shows a few functions. 
 
-![alt text](https://raw.githubusercontent.com/gfcwfzkm/SMRTXE_Project/master/IMG_20181010_175347.jpg)
