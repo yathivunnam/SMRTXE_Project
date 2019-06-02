@@ -1,8 +1,6 @@
 /* 
  * File:   glcd_library
- * Author: Pascal G. (gfcwfzkm), David V.
- * Comments: Ausbildung Display Programmieren
- * Revision history: 24.05.18 Erstellung der Bibliothek
+ * Author: gfcwfzkm)
  */
 
 #ifndef GLCD_LIBRARY_H
